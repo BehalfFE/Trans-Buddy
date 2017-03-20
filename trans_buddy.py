@@ -120,7 +120,7 @@ def update_translation(message_id, translation):
 
 def pipeline():
     with open(csv_path, 'rb') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in spamreader:
             category = row[0].strip('"')
             key = row[1].strip('"')
