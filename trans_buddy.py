@@ -28,6 +28,7 @@ else:
     csv_path = options.path
 
 SELECT_SOURCE_MESSAGE_SCRIPT = 'SELECT * FROM SourceMessage WHERE category = "%s" AND message = "%s"'
+SELECT_MESSAGE_SCRIPT = 'SELECT * FROM Message WHERE id = %s'
 INSERT_NEW_SOURCE_MESSAGE_SCRIPT = 'INSERT INTO SourceMessage (id, category, message) VALUES ("%s", "%s", "%s")'
 INSERT_NEW_TRANSLATION = 'INSERT INTO Message VALUES (%s, "en_US", "%s");'
 UPDATE_TRANSLATION = 'UPDATE Message SET translation = "%s" WHERE id = %s;'
@@ -58,6 +59,11 @@ def get_current_record_id(category, key):
     return cur.fetchall()[0][0]
 
 
+def get_message_by_id(message_id):
+    cur.execute(SELECT_MESSAGE_SCRIPT % message_id)
+    return cur.fetchall()
+
+
 # true means message exists
 def check_source_message_exists(category, key):
     cur.execute(SELECT_SOURCE_MESSAGE_SCRIPT % (category, key))
@@ -74,11 +80,12 @@ def insert_new_source_message(category, key):
     last_id = source_message_table_max_id()
 
     try:
-        print 'inserting new source message!'
+        print 'inserting new source message:'
+        print INSERT_NEW_SOURCE_MESSAGE_SCRIPT % (last_id + 1, category, key)
         cur.execute(INSERT_NEW_SOURCE_MESSAGE_SCRIPT % (last_id + 1, category, key))
         db.commit()
     except:
-        print "error inserting source message"
+        print "error inserting source message\n\n"
         db.rollback()
 
     return last_id + 1
@@ -87,20 +94,27 @@ def insert_new_source_message(category, key):
 def create_translation(new_id, translation):
     try:
         print 'inserting new translation!'
+        print INSERT_NEW_TRANSLATION % (new_id, translation)
         cur.execute(INSERT_NEW_TRANSLATION % (new_id, translation))
         db.commit()
     except:
-        print "error inserting translation"
+        print "error inserting translation\n\n"
         db.rollback()
 
 
 def update_translation(message_id, translation):
     try:
         print 'updating translation!'
-        cur.execute(UPDATE_TRANSLATION % (translation, message_id))
-        db.commit()
+
+        if len(get_message_by_id(message_id)) == 0:
+            print "message doesn't exist, attempting insertion"
+            create_translation(message_id, translation)
+        else:
+            print UPDATE_TRANSLATION % (translation, message_id)
+            cur.execute(UPDATE_TRANSLATION % (translation, message_id))
+            db.commit()
     except:
-        print "error updating translation"
+        print "error updating translation\n\n"
         db.rollback()
 
 
@@ -108,9 +122,9 @@ def pipeline():
     with open(csv_path, 'rb') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in spamreader:
-            category = row[0]
-            key = row[1]
-            translation = row[2]
+            category = row[0].strip('"')
+            key = row[1].strip('"')
+            translation = row[2].strip('"')
             message_exist = check_source_message_exists(category, key)
 
             if not message_exist:
