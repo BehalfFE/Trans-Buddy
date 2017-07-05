@@ -19,8 +19,13 @@ parser.add_option("-s", "--staging",
                   host: zazmamessages.cu2ovaqnaz1u.us-east-1.rds.amazonaws.com
                   """)
 
-(options, args) = parser.parse_args()
+parser.add_option("-t", "--target-host",
+                  default="127.0.0.1",
+                  help="""If present, will connect and work with the specified DB host
+                  """)
 
+
+(options, args) = parser.parse_args()
 if not options.path:
     print "\nNeed a valid CSV path, need to work with something here young Grasshopper!\n"
     exit()
@@ -40,7 +45,7 @@ if options.staging:
                          passwd="YqMvAftZyjEqgox",
                          db="zazmamessages")
 else:
-    db = MySQLdb.connect(host="127.0.0.1",
+    db = MySQLdb.connect(host=options.target_host,
                      user="root",
                      passwd="1234",
                      db="zazmamessages")
