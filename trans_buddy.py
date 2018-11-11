@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from optparse import OptionParser
-import MySQLdb
+import mysql.connector
 import csv
 
 parser = OptionParser()
@@ -40,12 +40,12 @@ UPDATE_TRANSLATION = 'UPDATE Message SET translation = "%s" WHERE id = %s;'
 
 
 if options.staging:
-    db = MySQLdb.connect(host="zazmamessages.cu2ovaqnaz1u.us-east-1.rds.amazonaws.com",
+    db = mysql.connector.connect(host="zazmamessages.cu2ovaqnaz1u.us-east-1.rds.amazonaws.com",
                          user="zazma_website",
                          passwd="YqMvAftZyjEqgox",
                          db="zazmamessages")
 else:
-    db = MySQLdb.connect(host=options.target_host,
+    db = mysql.connector.connect(host=options.target_host,
                      user="root",
                      passwd="1234",
                      db="zazmamessages")
